@@ -8,13 +8,14 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY ='django-insecure-ux$&02l*ri@g!fp$@@8g7kxd4#ix6$_=xo!r+bzmz3@f2&=i@6'
-DEBUG = False # Set to False in production
+DEBUG = True # Set to False in production
 
 ALLOWED_HOSTS = [
     'www.wtsdealnow.com',
     '.wtsdealnow.com',  # Allow subdomains
     'localhost',
     '127.0.0.1',
+    '143.110.186.149',
     '[::1]'
 ]
 # CORS Configuration
@@ -22,6 +23,8 @@ ALLOWED_HOSTS = [
 CORS_ALLOWED_ORIGINS = [
     "http://13.239.113.104",
     "https://13.239.113.104",
+    "https://143.110.186.149",
+    "http://143.110.186.149"
     
 ]
 
