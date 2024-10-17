@@ -29,7 +29,7 @@
     <!-- Helpers -->
     <script src="/static/assets/vendor/js/helpers.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    
+
 
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
@@ -38,6 +38,62 @@
     <!-- custom css -->
 
     <style>
+        video {
+            width: 250px;
+            height: 150px;
+            border-radius: 5px;
+        }
+
+
+        audio {
+
+            width: 250px;
+            height: 50px;
+            margin-left: 15px;
+        }
+
+        .action-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 80px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown:hover .action-btn {
+            background-color: #3e8e41;
+        }
+
         table {
             border-collapse: collapse;
             width: 100%;
@@ -52,6 +108,68 @@
 
         th {
             background-color: #f2f2f2;
+        }
+
+        .footer {
+            background-color: #f2f2f2;
+            /* Light gray background */
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer__option {
+            margin-right: 1rem;
+        }
+
+        .footer {
+            background-color: #f2f2f2;
+            /* Light gray background */
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer__option {
+            margin-right: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+
+        .show {
+            display: block;
+        }
+
+
+        #fileTypeText {
+            /* margin-top: 10px; */
+            font-weight: bold;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+
+        .bxsize {
+            margin-top: 0;
+            font-size: 4.5rem;
+        }
+
+        /* user profile status */
+
+
+
+        .accordion-item:hover .collapse {
+            display: block;
+
         }
     </style>
     {% block head %}
@@ -81,7 +199,7 @@
 
                 <ul class="menu-inner py-1">
                     <!-- Dashboard -->
-                    <li class="menu-item">
+                    <li class="menu-item" id="Dashboard">
                         <a href="/dashboard/" class="menu-link">
                             <i class="menu-icon tf-icons bx bxs-dashboard"></i>
                             <div data-i18n="Analytics">Dashboard</div>
@@ -92,13 +210,13 @@
                         <span class="menu-header-text">Pages</span>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="Campaign">
                         <a href="/campaign/" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-unite"></i>
                             <div>Campaign</div>
                         </a>
                     </li>
-                    
+
                     <li class="menu-item" id="linkTemplates">
                         <a href="/link_templates/" class="menu-link">
                             <i class='menu-icon tf-icons bx bxs-layout'></i>
@@ -127,7 +245,7 @@
                     <!--    </a>-->
                     <!--</li>-->
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="sendSms">
                         <a href="/send-sms/" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-home-circle"></i>
                             <div data-i18n="Analytics">Send SMS</div>
@@ -136,19 +254,19 @@
 
 
                     <!-- Tables -->
-                    <li class="menu-item">
+                    <li class="menu-item" id="Reports">
                         <a href="/reports" class="menu-link">
                             <i class="menu-icon tf-icons bx bxs-report"></i>
                             <div data-i18n="Tables">Reports</div>
                         </a>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item" id="Schedules">
                         <a href="/schedules/" class="menu-link">
                             <i class="menu-icon bx bxs-calendar-event"></i>
-                          <div data-i18n="Tables">Schedules</div>
+                            <div data-i18n="Tables">Schedules</div>
                         </a>
-                      </li>
+                    </li>
 
                     <li class="menu-header small text-uppercase"><span class="menu-header-text">About</span></li>
                     <li class="menu-item">
@@ -258,31 +376,55 @@
                                     <li>
                                         <div class="dropdown-divider"></div>
                                     </li>
-                                    
-                    <li>
-                    <div class="accordion" id="accordionExample">
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="font-weight: bold">
-                            My Profile
-                          </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show"
-                          data-bs-parent="#accordionExample">
-                          <div class="accordion-body">
-                            <p style="font-weight: bold">WABA ID : {{ WABA_ID }}</p>
-                            <p style="font-weight: bold">PHONE ID : {{ PHONE_ID }} </p>
-                            <p style="font-weight: bold">COINS : {{ coins }} </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
 
-   
+                                    <li>
+                                        <div class="accordion" id="accordionExample">
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button" type="button"
+                                                        data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                                                        aria-expanded="true" aria-controls="collapseOne"
+                                                        style="font-weight: bold">
+                                                        My Profile
+                                                    </button>
+                                                </h2>
+                                                <div id="collapseOne" class="accordion-collapse collapse show"
+                                                    data-bs-parent="#accordionExample">
+                                                    <div class="accordion-body">
+                                                        <p style="font-weight: bold">WABA ID : {{ WABA_ID }}</p>
+                                                        <p style="font-weight: bold">PHONE ID : {{ PHONE_ID }} </p>
+                                                        <p style="font-weight: bold">COINS : {{ coins }} </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+
+
                                     <li>
                                         <div class="dropdown-divider"></div>
+                                    </li>
+                                    <li>
+                                        <div class="accordion" id="accordionExample">
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button" type="button"
+                                                        data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                                                        aria-expanded="true" aria-controls="collapseOne"
+                                                        style="font-weight: bold">
+                                                        My Profile
+                                                    </button>
+                                                </h2>
+                                                <div id="collapseOne" class="accordion-collapse collapse show"
+                                                    data-bs-parent="#accordionExample">
+                                                    <div class="accordion-body">
+                                                        <p style="font-weight: bold">WABA ID : {{ WABA_ID }} </p>
+                                                        <p style="font-weight: bold">PHONE ID : {{ PHONE_ID }} </p>
+                                                        <p style="font-weight: bold">COINS : {{ coins }} </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{% url 'logout' %}">
@@ -296,23 +438,37 @@
                         </ul>
                     </div>
                 </nav>
+                <script>
+                    $(document).ready(function () {
+                        // Disable click behavior
+                        $('.accordion-item .accordion-button').attr('data-bs-toggle', '');
+                        $('.accordion-item .accordion-button').attr('aria-expanded', 'false');
 
+                        // Enable hover behavior
+                        $('.accordion-item').hover(function () {
+                            $(this).find('.collapse').collapse('show');
+                        }, function () {
+                            $(this).find('.collapse').collapse('hide');
+                        });
+                    });
+
+                </script>
                 <!-- / Navbar -->
                 <script>
-          $(document).ready(function () {
-            // Disable click behavior
-            $('.accordion-item .accordion-button').attr('data-bs-toggle', '');
-            $('.accordion-item .accordion-button').attr('aria-expanded', 'false');
+                    $(document).ready(function () {
+                        // Disable click behavior
+                        $('.accordion-item .accordion-button').attr('data-bs-toggle', '');
+                        $('.accordion-item .accordion-button').attr('aria-expanded', 'false');
 
-            // Enable hover behavior
-            $('.accordion-item').hover(function () {
-              $(this).find('.collapse').collapse('show');
-            }, function () {
-              $(this).find('.collapse').collapse('hide');
-            });
-          });
+                        // Enable hover behavior
+                        $('.accordion-item').hover(function () {
+                            $(this).find('.collapse').collapse('show');
+                        }, function () {
+                            $(this).find('.collapse').collapse('hide');
+                        });
+                    });
 
-        </script>
+                </script>
 
 
                 <!-- Content wrapper -->

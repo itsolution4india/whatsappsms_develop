@@ -33,5 +33,9 @@
 {% else %}
 <p>No scheduled messages found.</p>
 {% endif %}
-
+<script>
+    $(document).ready(function(){
+        $('#Schedules').addClass('active');
+    });
+  </script>
 {% endblock %}
