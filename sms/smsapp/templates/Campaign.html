@@ -113,7 +113,7 @@
                             <div class="container">
                                 <div class="row">
                                     <div class="col w-50">
-                                        <label class="form-label mt-3" for="actionHeaderType">Header</label>
+                                        <label class="form-label mt-3" for="actionHeaderType" id="headerLabel">Header</label>
                                         <select class="form-select w-100" id="actionHeaderType" name="actionHeaderType"
                                             onchange="handleActionHeader()">
                                             <option selected>Select</option>
@@ -157,33 +157,32 @@
                             <div class="container">
                                 <div class="row">
                                     <div class="col">
-                                        <label class="form-label mt-5 fs-6">Body</label>
-
-
-                                        <!-- <div contenteditable="true"
-                                                            style="height: 250px; text-indent: 5px;"
-                                                            class="form-control">
-                                                            <textarea id="editor" class="form-control"
-                                                                name="body-datat"></textarea>
-                                                        </div> -->
+                                        <label class="form-label mt-5 fs-6" id="bodyLabel">Body</label>
 
                                         <textarea class="form-control" id="editor" rows="6" cols="50"
                                             name="template_data"></textarea>
 
 
-                                        <div class="mb-3">
+                                        <div class="mb-3" id="bodyButtons">
 
                                             <div class="btn btn-dark mt-3" id="bold-button">Bold</div>
+                                            <div class="btn btn-dark mt-3" onclick="addVariable()">Add Variable</div>
 
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
+                            <div id="variable-inputs-container" class="mb-3">
+                                <!-- Dynamic input fields will be added here -->
+                            </div>
+
+                            <input type="hidden" name="variables_data" id="variables_data">
+
                             <div class="container">
                                 <div class="row">
                                     <div class="col">
-                                        <label class="form-label mt-3">Footer</label>
+                                        <label class="form-label mt-3" id="footerLabel">Footer</label>
                                         <input type="text" placeholder="Enter Footer" class="form-control w-100"
                                             name="footer_data">
                                     </div>
@@ -191,7 +190,7 @@
                             </div>
 
 
-                            <div class="container">
+                            <div class="container" id="addButtons">
                                 <div class="d-grid">
                                     <div class="col">
                                         <div class="form-group mt-3">
@@ -345,8 +344,10 @@
                                 </div>
 
                             </div>
-                            <button class="btn btn-primary mt-4" style="width: 100px;" id="run"
+                            <center>
+                                <button class="btn btn-primary mt-4" style="width: 100px;" id="run"
                                 type="submit">Submit</button>
+                            </center>
                         </form>
                     </div>
 
@@ -431,7 +432,107 @@
 
 
                     </div>
-
+                    {% verbatim %}
+                    <script>
+                        let counter = 1;
+                        let variableMap = new Map(); // Store variable positions and lengths
+                        
+                        function addVariable() {
+                            // Add variable to textarea
+                            const editor = document.getElementById('editor');
+                            const cursorPos = editor.selectionStart;
+                            const textBefore = editor.value.substring(0, cursorPos);
+                            const textAfter = editor.value.substring(cursorPos);
+                            const variable = '{{' + counter + '}}';
+                            
+                            // Store variable position and length
+                            variableMap.set(counter, {
+                                position: cursorPos,
+                                length: variable.length
+                            });
+                            
+                            editor.value = textBefore + variable + textAfter;
+                            const newCursorPos = cursorPos + variable.length;
+                            editor.setSelectionRange(newCursorPos, newCursorPos);
+                            
+                            // Create and add input field
+                            const container = document.getElementById('variable-inputs-container');
+                            const inputGroup = document.createElement('div');
+                            inputGroup.className = 'input-group mb-2 container';
+                            inputGroup.setAttribute('data-var-id', counter);
+                            inputGroup.innerHTML = `
+                                <span class="input-group-text">Variable {{${counter}}}</span>
+                                <input type="text" class="form-control variable-input" 
+                                       name="var_input_${counter}" 
+                                       placeholder="Enter value for variable ${counter}">
+                                <span class="input-group-text" style="cursor: pointer;" 
+                                      onclick="removeVariable(${counter})">
+                                    <i class='bx bx-x bg-danger p-1 text-white rounded-circle'></i>
+                                </span>
+                            `;
+                            container.appendChild(inputGroup);
+                            
+                            counter++;
+                            editor.focus();
+                        }
+                        
+                        function removeVariable(varId) {
+                            // Remove input field
+                            const inputGroup = document.querySelector(`[data-var-id="${varId}"]`);
+                            if (inputGroup) {
+                                inputGroup.remove();
+                            }
+                            
+                            // Remove variable from textarea
+                            const editor = document.getElementById('editor');
+                            let text = editor.value;
+                            
+                            // Create a new regex pattern that matches {{varId}} exactly
+                            const varPattern = new RegExp(`\\{\\{${varId}\\}\\}`);
+                            text = text.replace(varPattern, '');
+                            editor.value = text;
+                            
+                            // Update remaining variables in textarea if needed
+                            let updatedText = editor.value;
+                            for (let i = varId + 1; i < counter; i++) {
+                                const oldVar = `{{${i}}}`;
+                                const newVar = `{{${i-1}}}`;
+                                updatedText = updatedText.replace(oldVar, newVar);
+                            }
+                            editor.value = updatedText;
+                            
+                            // Update remaining input fields
+                            const remainingInputs = document.querySelectorAll('[data-var-id]');
+                            remainingInputs.forEach(input => {
+                                const currentId = parseInt(input.getAttribute('data-var-id'));
+                                if (currentId > varId) {
+                                    // Update data-var-id
+                                    input.setAttribute('data-var-id', currentId - 1);
+                                    // Update span text
+                                    input.querySelector('.input-group-text').textContent = `Variable {{${currentId - 1}}}`;
+                                    // Update input placeholder
+                                    input.querySelector('input').placeholder = `Enter value for variable ${currentId - 1}`;
+                                    // Update remove button onclick
+                                    input.querySelector('span:last-child').setAttribute('onclick', `removeVariable(${currentId - 1})`);
+                                }
+                            });
+                            
+                            // Decrement counter since we removed a variable
+                            counter--;
+                        }
+                        
+                        // Add form submit event listener
+                        document.getElementById('campaign_form').addEventListener('submit', function(e) {
+                            // Get all variable input values
+                            const inputs = document.querySelectorAll('.variable-input');
+                            const variablesData = Array.from(inputs).map(input => input.value);
+                            console.log('Variables Data:', variablesData);
+                            
+                            // Store the data in hidden input
+                            document.getElementById('variables_data').value = JSON.stringify(variablesData);
+                        });
+                    </script>
+                    {% endverbatim %}
 
                     <script>
 
@@ -873,7 +974,7 @@
 
 
                     <div class="container-xxl flex-grow-1 container-p-y"
-                        style="height: 500px; box-sizing: border-box; margin-top: 170px;">
+                        style="height: 500px; box-sizing: border-box;">
 
                         <div class="row">
                             <div class="card" style="min-height: 400px; box-shadow: none; overflow-y: auto;">
@@ -884,7 +985,6 @@
                                     </div>
                                     <thead>
                                         <tr>
-                                            <th scope="col">Template ID</th>
                                             <th scope="col">Template Name</th>
                                             <th scope="col">Category</th>
                                             <th scope="col">Media Type</th>
@@ -896,7 +996,6 @@
                                     <tbody>
                                         {% for campaign in campaign_list %}
                                         <tr>
-                                            <td>{{ campaign.template_id }}</td>
                                             <td>{{ campaign.template_name }}</td>
                                             <td>{{ campaign.category }}</td>
                                             <td>{{ campaign.media_type }}</td>
@@ -931,6 +1030,66 @@
     </div>
 
 </div>
+<script>
+    // Get the category select element
+const categorySelect = document.querySelector('select[name="category"]');
+
+// Get the relevant form elements
+const editorContainer = document.querySelector('#editor');
+const actionHeaderContainer = document.querySelector('#actionHeaderType');
+const footerContainer = document.querySelector('input[name="footer_data"]');
+const buttonsContainer = document.querySelector('.buttons_bg');
+
+const headerLabel = document.querySelector('#headerLabel');
+const bodyLabel = document.querySelector('#bodyLabel');
+const bodyButtons = document.querySelector('#bodyButtons');
+const addButtons = document.querySelector('#addButtons');
+const footerLabel = document.querySelector('#footerLabel');
+
+
+// Get the individual form fields
+const editorField = document.querySelector('#editor');
+const footerField = document.querySelector('input[name="footer_data"]');
+const buttonFields = document.querySelectorAll('.buttons_bg input');
+
+// Add event listener to the category select
+categorySelect.addEventListener('change', handleCategoryChange);
+
+function handleCategoryChange() {
+  const selectedCategory = categorySelect.value;
+
+  // Show/hide the relevant containers
+  if (selectedCategory === 'Authentication') {
+    editorContainer.classList.add('hidden');
+    actionHeaderContainer.classList.add('hidden');
+    footerContainer.classList.add('hidden');
+    buttonsContainer.classList.add('hidden');
+
+    headerLabel.classList.add('hidden');
+    bodyLabel.classList.add('hidden');
+    bodyButtons.classList.add('hidden');
+    addButtons.classList.add('hidden');
+    footerLabel.classList.add('hidden');
+
+    // Remove the required attribute from the relevant fields
+    buttonFields.forEach(field => field.required = false);
+  } else {
+    editorContainer.classList.remove('hidden');
+    actionHeaderContainer.classList.remove('hidden');
+    footerContainer.classList.remove('hidden');
+    // buttonsContainer.classList.remove('hidden');
+
+    headerLabel.classList.remove('hidden');
+    bodyLabel.classList.remove('hidden');
+    bodyButtons.classList.remove('hidden');
+    addButtons.classList.remove('hidden');
+    footerLabel.classList.remove('hidden');
+
+    // Restore the required attribute for the relevant fields
+    editorField.required = true;
+  }
+}
+</script>
 <script>
     $(document).ready(function(){
         $('#Campaign').addClass('active');

@@ -11,7 +11,7 @@
 <h3 class="text-center pt-4 mb-0">Your Scheduled Messages</h3>
 
 {% if scheduledmessages %}
-<div class="notifications">
+<div class="notifications d-flex flex-wrap">
     {% for message in scheduledmessages %}
     <div class="notification custom-box shadow p-3 mb-3 rounded m-4">
         <strong>Template:</strong> {{ message.template_name }}<br>
@@ -20,8 +20,7 @@
         <strong>Scheduled Time:</strong> {{ message.schedule_time }}<br>
         <strong>Created At:</strong> {{ message.created_at }}<br>
         <strong>Status:</strong><span>{% if message.is_sent %} Sent <i
-                class="fa fa-check btn-success p-2 rounded-circle"></i>{% else %} Pending <i
-                class="fa-solid fa-clock btn-secondary p-2 rounded-circle"></i>{% endif %}</span><br>
+                class="fa fa-check btn-success p-2 rounded-circle"></i>{% else %} Pending <i class='bx bx-timer btn-secondary p-2 rounded-circle'></i>{% endif %}</span><br>
         <form action="{% url 'delete_schedule' message.id %}" method="POST" style="display:inline;">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">Delete</button>

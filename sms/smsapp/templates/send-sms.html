@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<style>
+  .hideelement {
+    display: none;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -81,10 +86,12 @@
               {% csrf_token %}
               <div class="mb-3">
                 <label class="form-label">Campaign Name</label>
+                <span class="text-warning">* Required</span>
                 <input type="text" name="campaign_title" class="form-control">
               </div>
               <div class="mb-3">
                 <label class="form-label">Template Name</label>
+                <span class="text-warning">* Required</span>
                 <!-- <input type="text" id="params" name="params" class="form-control"> -->
 
                 <select id="template-select" onchange="updateTemplate()" class="form-select" name="params">
@@ -94,15 +101,20 @@
                 </select>
               </div>
 
+              <div class="mb-3" id="variable_inputs">
+              </div>
+
               <input type="hidden" id="media_type_input" name="media_type">
               <input type="hidden" name="action_type" id="actionTypeInput" value="submit">
 
-              <div class="mb-3">
+              <div class="mb-3" id="upload_media">
                 <label class="form-label" for="mediaIdInput">Upload Media</label>
+                <span class="text-warning">* Required</span>
                 <input class="form-control" type="file" name="file" id="fileInput">
               </div>
               <div class="mb-3">
                 <label class="form-label">Upload Excel File</label>
+                <span class="text-secondary">* Optional</span>
                 <input type="file" id="id_files" name="files" class="form-control" accept=".xls,.xlsx">
               </div>
               <p style="text-align: center;"></p>
@@ -278,33 +290,79 @@
   const templateButton = JSON.parse('{{ template_button|escapejs }}');
   const templateMedia = JSON.parse('{{ template_media|escapejs }}');
 
-  function updateTemplate() {
-    const select = document.getElementById('template-select');
-    const selectedIndex = select.selectedIndex;
+  {% verbatim %}
+      function updateTemplate() {
+        const select = document.getElementById('template-select');
+        const selectedIndex = select.selectedIndex;
 
-    // Clear previous data before updating
-    document.getElementById('template-status').innerText = '';
-    document.getElementById('template-media').innerText = '';
-    document.getElementById('template-data').innerText = '';
-    document.getElementById('template-button1').innerText = '';
-    document.getElementById('template-button2').innerText = '';
+        // Clear previous data before updating
+        document.getElementById('template-status').innerText = '';
+        document.getElementById('template-media').innerText = '';
+        document.getElementById('template-data').innerText = '';
+        document.getElementById('template-button1').innerText = '';
+        document.getElementById('template-button2').innerText = '';
 
-    // Get the selected data
-    const selectedData = templateData[selectedIndex];
-    const selectedStatus = templateStatus[selectedIndex];
-    const selectedButton = JSON.parse(templateButton[selectedIndex]); // Parse button data if it's JSON
-    const selectedMedia = templateMedia[selectedIndex];
+        const variableInputsDiv = document.getElementById('variable_inputs');
+        variableInputsDiv.innerHTML = '';  // Clear inputs but not the label
+    
+        // Add the label if variables are present and the label is not already there
+        if (!document.getElementById('variable_label')) {
+            const label = document.createElement('label');
+            label.className = 'form-label';
+            label.id = 'variable_label';  // Give it an id so it won't be added multiple times
+            label.textContent = 'Enter Variables';
+            variableInputsDiv.appendChild(label);
+            variableInputsDiv.appendChild(document.createElement('br'));
+        }
 
-    // Display data
-    document.getElementById('template-status').innerText = selectedStatus;
-    document.getElementById('template-media').innerText = selectedMedia;
-    document.getElementById('template-data').innerText = typeof selectedData === 'object' ? JSON.stringify(selectedData, null, 2) : selectedData;
-    document.getElementById('template-button1').innerText = typeof selectedButton === 'object' ? JSON.stringify(selectedButton[0]['text'], null, 2) : selectedButton;
-    document.getElementById('template-button2').innerText = typeof selectedButton === 'object' ? JSON.stringify(selectedButton[1]['text'], null, 2) : selectedButton;
 
-    document.getElementById('media_type_input').value = selectedMedia;
+        // Get the selected data
+        const selectedData = templateData[selectedIndex];
+        const selectedStatus = templateStatus[selectedIndex];
+        const selectedButton = JSON.parse(templateButton[selectedIndex]); // Parse button data if it's JSON
+        const selectedMedia = templateMedia[selectedIndex];
 
-  }
+        if ((selectedMedia === "TEXT") || (selectedMedia === "N/A")) {
+          $('#upload_media').addClass('hideelement');
+        } else {
+          $('#upload_media').removeClass('hideelement');
+        }
+    
+        const placeholderRegex = /\{\{(\d+)\}\}/g;
+        let match;
+        while ((match = placeholderRegex.exec(selectedData)) !== null) {
+          const variableNumber = match[1];
+          
+          // Create label for each placeholder
+          const label = document.createElement('label');
+          label.htmlFor = `variable${variableNumber}`;
+          label.textContent = `Enter value for {{${variableNumber}}}`;
+          label.className = 'form-label text-warning'; // Optionally, you can add a class for styling
+          
+          // Create input field for each placeholder
+          const inputField = document.createElement('input');
+          inputField.type = 'text';
+          inputField.className = 'form-control mb-2';
+          inputField.name = `variable${variableNumber}`;
+          inputField.id = `variable${variableNumber}`;  // Set id to match the label's "for" attribute
+          inputField.placeholder = `Enter value for {{${variableNumber}}}`;
+          
+          // Add the label and input field to the div
+          variableInputsDiv.appendChild(label);
+          variableInputsDiv.appendChild(inputField);
+      }
+
+        // Display data
+        document.getElementById('template-status').innerText = selectedStatus;
+        document.getElementById('template-media').innerText = selectedMedia;
+        document.getElementById('template-data').innerText = typeof selectedData === 'object' ? JSON.stringify(selectedData, null, 2) : selectedData;
+        document.getElementById('template-button1').innerText = typeof selectedButton === 'object' ? JSON.stringify(selectedButton[0]['text'], null, 2) : selectedButton;
+        document.getElementById('template-button2').innerText = typeof selectedButton === 'object' ? JSON.stringify(selectedButton[1]['text'], null, 2) : selectedButton;
+
+        document.getElementById('media_type_input').value = selectedMedia;
+
+      }
+      {% endverbatim %}
 
   // Initial display setup on page load
   document.addEventListener("DOMContentLoaded", function () {
